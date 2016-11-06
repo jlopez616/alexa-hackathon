@@ -61,7 +61,7 @@ exports.handler = function( event, context ) {
                         sessionAttributes['currentLearnIndex'] += 1;
 
                         if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {  
-                            sessionAttributes['applicationState'] = menu;
+                            sessionAttributes['applicationState'] = 'menu';
                         }
 
                         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
@@ -78,6 +78,49 @@ exports.handler = function( event, context ) {
             var intentStates = {};
 
             intentStates[intentName]();
+        }
+
+        test: function(intentName) {
+            handlers = {
+                initializeTest: function() {
+                    var currentQuestion = sessionAttributes['currentTestIndex'];
+                    var definition = sessionAttributes['questions'][currentQuestion]['definition'];
+                    var choices = "A: " + sessionAttributes['questionChoices']['currentTestIndex'][0] + " " +
+                                  "B: " + sessionAttributes['questionChoices']['currentTestIndex'][1] + " " + 
+                                  "C: " + sessionAttributes['questionChoices']['currentTestIndex'][2] + " " + 
+                                  "D: " + sessionAttributes['questionChoices']['currentTestIndex'][3];
+                    say = definition + " " + choices;
+
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                }
+
+                answer: function() {
+                    var currentQuestion = sessionAttributes['currentTestIndex'];
+                    if isCorrect(request.intent.slots.answer.value, currentQuestion) {
+                        say = "That is correct.";
+                        sessionAttributes['score'] += 1;
+
+                    } else {
+                        say = "That is incorrect. The correct answer was " + sessionAttributes['questions'][currentQuestion]['term'];
+                    }
+
+                    sessionAttributes['currentTestIndex'] += 1;
+
+                    if (sessionAttributes['currentTestIndex'] == sessionAttributes['questions'].length) {
+                        sessionAttributes['applicationState'] = 'menu';
+                    }
+
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                }
+
+                cancel: function () {
+                    //To Implement Later
+                },
+
+                help: function () {
+
+                }
+            }
         }
     };
 
@@ -172,7 +215,7 @@ function populateAnswers(questions) {
 }
 
 function isCorrect(givenAnswer, questionIndex) {
-    if (givenAnswer === session.attributes.correct_answers[questionIndex]) {
+    if (givenAnswer === sessionAttributes['correctAnswers'][questionIndex]) {
         return true;
     } else {
         return false;
