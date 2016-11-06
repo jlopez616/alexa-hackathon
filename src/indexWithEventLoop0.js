@@ -83,7 +83,14 @@ exports.handler = function( event, context ) {
         learn: function (intent, sessionAttributes) {
             handlers = {
                 continue: function () {
+                        var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
+                        say = term['term'] + ", " + term['definition'];
+                        sessionAttributes['currentLearnIndex'] += 1;
+                        if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {
+                            sessionAttributes['applicationState'] = menu;
+                        }
 
+                        context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
                 },
 
                 cancel: function () {
@@ -104,9 +111,25 @@ exports.handler = function( event, context ) {
     };
 
     if (event.request.type === "LaunchRequest") {
-        say = "Welcome to Quizlex! You have " + questions.length + " sets to study. I've selected Set 1 " + sets[0].name
+        say = "Welcome to Quizlex! You have " + questions.length + " sets to study. I've selected " + sets[0].name
         + " for you. Would you like to learn this set or move on to the next set?";
+
+        //initialization
+        var answerData = populateAnswers(questions),
+            correctAnswers = answerData['correctAnswers'],
+            questionChoices = answerData['choices'],
+            score = 0,
+            currentTestIndex = 0,
+            currentLearnIndex = 0;
+
+        sessionAttributes['questions'] = questions;
+        sessionAttributes['correctAnswers'] = correctAnswers;
+        sessionAttributes['questionChoices'] = questionChoices;
+        sessionAttributes['score'] = score;
+        sessionAttributes['currentTestIndex'] = currentTestIndex;
+        sessionAttributes['currentLearnIndex'] = currentLearnIndex;
         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+
     } else {
         states[sessionAttributes.appState](event.request.intent);
     }
@@ -131,4 +154,57 @@ function buildSpeechletResponse(say, shouldEndSession) {
         },
         shouldEndSession: shouldEndSession
     };
+}
+
+function populateAnswers(questions) {
+    var GAME_LENGTH = questions.length;
+    var choice_names = ['A', 'B', 'C', 'D'];
+    var correct_answers = [];
+    var currentChoices = [];
+    var choices = [];
+    var correct_answer = "";
+    var answer_index;
+    var currentTerm;
+
+    function shuffle(a) {
+        var j, x, i;
+        for (i = a.length; i; i--) {
+            j = Math.floor(Math.random() * i);
+            x = a[i - 1];
+            a[i - 1] = a[j];
+            a[j] = x;
+        }
+    }
+
+    for (var i = 0; i < GAME_LENGTH; i++) {
+        currentTerm = questions[i]['term'];
+        currentChoices.push(currentTerm);
+
+        for (var i = 0; i < 3; i++) {
+            choice_index = Math.floor(Math.random() * GAME_LENGTH);
+            if (questions[choice_index]['term'] == currentTerm) {
+                i--;
+            } else {
+                currentChoices.push(questions[choice_index]['term']);
+            }
+        }
+
+        shuffle(currentChoices);
+
+        correct_answer = choice_names[currentChoices.indexOf(currentTerm)]; //returns string value of correct choice index;
+
+        choices.append(currentChoices);
+
+        correct_answers.append(correct_answer);
+    }
+
+    return {correctAnswers: correct_answers, choices: choices};
+}
+
+function isCorrect(givenAnswer, questionIndex) {
+    if (givenAnswer === session.attributes.correct_answers[questionIndex]) {
+        return true;
+    } else {
+        return false;
+    }
 }
