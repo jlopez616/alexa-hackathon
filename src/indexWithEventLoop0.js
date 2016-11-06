@@ -121,8 +121,24 @@ exports.handler = function( event, context ) {
     };
 
     if (event.request.type === "LaunchRequest") {
-        say = "Welcome to State Pop!  Say the name of a U.S. State.";
+        say = "Welcome to Quizlex. Would you like to test or learn?";
+        //initialization
+        var answerData = populateAnswers(questions),
+            correctAnswers = answerData['correctAnswers'],
+            questionChoices = answerData['choices'],
+            score = 0,
+            currentTestIndex = 0,
+            currentLearnIndex = 0;
+
+        session.attributes['questions'] = questions;
+        session.attributes['correctAnswers'] = correctAnswers;
+        session.attributes['questionChoices'] = questionChoices;
+        session.attributes['score'] = score;
+        session.attributes['currentTestIndex'] = currentTestIndex;
+        session.attributes['currentLearnIndex'] = currentLearnIndex;
+
         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+
     } else {
         states[sessionAttributes.applicationState](event.request.intent.name);
     }
@@ -147,4 +163,57 @@ function buildSpeechletResponse(say, shouldEndSession) {
         },
         shouldEndSession: shouldEndSession
     };
+}
+
+function populateAnswers(questions) {
+    var GAME_LENGTH = questions.length;
+    var choice_names = ['A', 'B', 'C', 'D'];
+    var correct_answers = [];
+    var currentChoices = [];
+    var choices = [];
+    var correct_answer = "";
+    var answer_index;
+    var currentTerm;
+
+    function shuffle(a) {
+        var j, x, i;
+        for (i = a.length; i; i--) {
+            j = Math.floor(Math.random() * i);
+            x = a[i - 1];
+            a[i - 1] = a[j];
+            a[j] = x;
+        }
+    }
+
+    for (var i = 0; i < GAME_LENGTH; i++) {
+        currentTerm = questions[i]['term'];
+        currentChoices.push(currentTerm);
+
+        for (var i = 0; i < 3; i++) {
+            choice_index = Math.floor(Math.random() * GAME_LENGTH);
+            if (questions[choice_index]['term'] == currentTerm) {
+                i--;
+            } else {
+                currentChoices.push(questions[choice_index]['term']);
+            }
+        }
+
+        shuffle(currentChoices);
+
+        correct_answer = choice_names[currentChoices.indexOf(currentTerm)]; //returns string value of correct choice index;
+
+        choices.append(currentChoices);
+
+        correct_answers.append(correct_answer);
+    }  
+
+    return {correctAnswers: correct_answers, choices: choices};
+}
+
+function isCorrect(givenAnswer, questionIndex) {
+    if (givenAnswer === session.attributes.correct_answers[questionIndex]) {
+        return true;
+    } else {
+        return false;
+    }
 }
