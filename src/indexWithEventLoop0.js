@@ -4,33 +4,7 @@
 
 var https = require('https');
 
-var sets = [
-    {
-        name: "",
-        questions: [
-            {
-                term: "",
-                definition: ""
-            }, {
-                term: "",
-                definition: ""
-            }
-
-        ]
-    },
-    {
-        name: "",
-        questions: [
-            {
-                term: "",
-                definition: ""
-            }, {
-                term: "",
-                definition: ""
-            }
-        ]
-    }
-]
+var sets = []
 
 exports.handler = function( event, context ) {
     var say = "";
@@ -104,12 +78,59 @@ exports.handler = function( event, context ) {
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
+
             var iStates = {}
             iStates["ContinueIntent"] = handlers.continue;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
             intentStates[intent.name]();
+        }
+
+        test: function(intent, sessionAttributes) {
+            handlers = {
+                initializeTest: function() {
+                    var currentQuestion = sessionAttributes['currentTestIndex'];
+                    var definition = sessionAttributes['questions'][currentQuestion]['definition'];
+                    var choices = "A: " + sessionAttributes['questionChoices']['currentTestIndex'][0] + " " +
+                                  "B: " + sessionAttributes['questionChoices']['currentTestIndex'][1] + " " +
+                                  "C: " + sessionAttributes['questionChoices']['currentTestIndex'][2] + " " +
+                                  "D: " + sessionAttributes['questionChoices']['currentTestIndex'][3];
+                    say = definition + " " + choices;
+
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                }
+
+                answer: function() {
+                    var currentQuestion = sessionAttributes['currentTestIndex'];
+                    if isCorrect(intent.slots.answer.value, currentQuestion) {
+                        say = "That is correct.";
+                        sessionAttributes['score'] += 1;
+
+                    } else {
+                        say = "That is incorrect. The correct answer was " + sessionAttributes['questions'][currentQuestion]['term'];
+                    }
+
+                    sessionAttributes['currentTestIndex'] += 1;
+
+                    if (sessionAttributes['currentTestIndex'] == sessionAttributes['questions'].length) {
+                        sessionAttributes['applicationState'] = 'menu';
+                    }
+
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                }
+
+                cancel: function () {
+                    say = "";
+                    shouldEndSession = true;
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                },
+
+                help: function () {
+                    say = "";
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                }
+            }
         }
     };
 
@@ -118,12 +139,12 @@ exports.handler = function( event, context ) {
         + " for you. Would you like to learn this set or move on to the next set?";
 
         //initialization
-        var answerData = populateAnswers(questions),
-        correctAnswers = answerData['correctAnswers'],
-        questionChoices = answerData['choices'],
-        score = 0,
-        currentTestIndex = 0,
-        currentLearnIndex = 0;
+        var answerData = populateAnswers(sets[0]['questions']),
+            correctAnswers = answerData['correctAnswers'],
+            questionChoices = answerData['choices'],
+            score = 0,
+            currentTestIndex = 0,
+            currentLearnIndex = 0;
 
         sessionAttributes['questions'] = questions;
         sessionAttributes['correctAnswers'] = correctAnswers;
@@ -205,7 +226,7 @@ function populateAnswers(questions) {
 }
 
 function isCorrect(givenAnswer, questionIndex) {
-    if (givenAnswer === session.attributes.correct_answers[questionIndex]) {
+    if (givenAnswer === sessionAttributes['correctAnswers'][questionIndex]) {
         return true;
     } else {
         return false;
