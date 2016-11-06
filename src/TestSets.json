@@ -1,0 +1,74 @@
+[
+    {
+        "name": "set1",
+        "questions": [
+            {
+                "term": "abhor",
+                "definition": "to find repugnant"
+            }, {
+                "term": "bombast",
+                "definition":" pompous or pretentious talk or writing"
+            }, {
+                "term": "epithet" ,
+                "definition": "a defamatory or abusive word or phrase"
+            }, {
+                "term": "moor",
+                "definition": "one of the Muslim people of north africa"
+            }, {
+                "term": "obsequious" ,
+                "definition": "attempting to win favor from influential people by flattery"
+            }, {
+                "term":  "visage" ,
+                "definition": "the appearance conveyed by a person's face"
+            }, {
+                "term": "rouse",
+                "definition": "cause to become awake or conscious"
+            }, {
+                "term": "homage" ,
+                "definition": "respectful deference"
+            }, {
+                "term": "lascivious" ,
+                "definition": "driven by lust"
+            }, {
+                "term": "mountebank" ,
+                "definition": "a flamboyant deceiver"
+            }
+        ]
+    },
+    {
+        "name": "set2",
+        "questions": [
+            {
+                "term": "end of han dynasty",
+                "definition": "220 ce"
+            }, {
+                "term": "roman capital moved to constantinople",
+                "definition":"333 ce"
+            }, {
+                "term": "fall of western roman empire" ,
+                "definition": "476 ce"
+            }, {
+                "term": "rise of islam",
+                "definition": "622 ce"
+            }, {
+                "term": "signing of the magna carta" ,
+                "definition": "1215"
+            }, {
+                "term":  "first crusade" ,
+                "definition": "1095"
+            }, {
+                "term": "bubonic plague arrives in europe",
+                "definition": "1347"
+            }, {
+                "term": "martin luther posts the 95 theses" ,
+                "definition": "1517"
+            }, {
+                "term": "start of the french revolution" ,
+                "definition": "1789"
+            }, {
+                "term": "berlin conference" ,
+                "definition": "1885"
+            }
+        ]
+    }
+]
