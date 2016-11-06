@@ -4,14 +4,31 @@
 
 var https = require('https');
 
-var terms = [
+var sets = [
     {
-        term: "",
-        definition:""
+        name: "",
+        questions: [
+            {
+                term: "",
+                definition: ""
+            }, {
+                term: "",
+                definition: ""
+            }
+
+        ]
     },
     {
-        term: "",
-        definition:""
+        name: "",
+        questions: [
+            {
+                term: "",
+                definition: ""
+            }, {
+                term: "",
+                definition: ""
+            }
+        ]
     }
 ]
 
@@ -23,61 +40,75 @@ exports.handler = function( event, context ) {
     var rank = 0;
     var sessionAttributes = event.session.attributes || {};
 
-    sessionAttributes.applicationState = sessionAttributes.applicationState || "launch";
+    sessionAttributes.applicationState = sessionAttributes.appState || "menu";
     sessionAttributes.applicationState = sessionAttributes.setNumber || 1;
 
     var states = {
-        launch: function (intentName) {
+        menu: function (intent, sessionAttributes) {
             handlers = {
+                changeSet: function () {
+                    sessionAttributes.setNumber++;
+                    if (sessionAttributes.setNumber > sets.length) sessionAttributes.setNumber = 1;
+                    say = "I've selected Set" + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
+                    + " for you. Would you like to learn this set or move on to the next set?";
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                },
+
                 changeState: function () {
-                    say = "Just say the name of a U.S. State, such as Massachusetts or California.";
+                    sessionAttributes.appState = intent.slots.answer.value || "menu"
+                    say = "";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 cancel: function () {
-                    say = "You asked for " + sessionAttributes.requestList.toString() + ". Thanks for playing!";
+                    say = "";
                     shouldEndSession = true;
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-                    say = "Just say the name of a U.S. State, such as Massachusetts or California.";
+                    say = "";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
-            var intentStates = {}
-            intentStates["StateRequestIntent"] = handlers.stateRequest;
-            intentStates["AMAZON.StopIntent"] = intentStates["AMAZON.CancelIntent"] = handlers.cancel;
-            intentStates["AMAZON.HelpIntent"] = handlers.help;
+            var iStates = {}
+            iStates["ChangeSetIntent"] = handlers.changeSet;
+            iStates["ChangeStateIntent"] = handlers.changeState;
+            iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
+            iStates["AMAZON.HelpIntent"] = handlers.help;
 
-            intentStates[intentName]();
+            intentStates[intent.name]();
         },
 
-        learn: function (intentName) {
+        learn: function (intent, sessionAttributes) {
             handlers = {
-                stateRequest: function () {
+                continue: function () {
 
                 },
 
                 cancel: function () {
-                    //To Implement Later
+
                 },
 
                 help: function () {
 
                 }
             }
-            var intentStates = {};
+            var iStates = {}
+            iStates["ContinueIntent"] = handlers.continue;
+            iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
+            iStates["AMAZON.HelpIntent"] = handlers.help;
 
-            intentStates[intentName]();
+            intentStates[intent.name]();
         }
     };
 
     if (event.request.type === "LaunchRequest") {
-        say = "Welcome to Quizlex! You have " + terms.length + " sets to study. I've selected Set 1 for you. ";
+        say = "Welcome to Quizlex! You have " + questions.length + " sets to study. I've selected Set 1 " + sets[0].name
+        + " for you. Would you like to learn this set or move on to the next set?";
         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
     } else {
-        states[sessionAttributes.applicationState](event.request.intent.name);
+        states[sessionAttributes.appState](event.request.intent);
     }
 };
 
