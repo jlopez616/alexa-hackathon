@@ -1,0 +1,6 @@
+SetNameIntent i want to study {set_name}
+SetNameIntent let me study {set_name}
+SetNameIntent show me {set_name}
+SetNameIntent load {set_name}
+SetNameIntent i want {set_name}
+SetNameIntent {set_name}
