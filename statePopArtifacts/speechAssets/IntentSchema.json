@@ -2,25 +2,7 @@
 {
   "intents": [
     {
-      "intent": "SkipSetIntent",
-    },
-    {
-      "intent": "LearnOrTestIntent",
-      "slots":[
-        {
-          "name":"answer",
-          "type":"LEARN_OR_TEST"
-        }
-      ]
-    },
-    {
-      "intent": "AnswerIntent",
-      "slots":[
-        {
-          "name":"answer",
-          "type":"LIST_OF_ANSWERS"
-        }
-      ]
+
     },
     {
       "intent": "AMAZON.StartOverIntent"

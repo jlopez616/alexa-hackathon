@@ -30,7 +30,7 @@ exports.handler = function( event, context ) {
 
                 changeState: function () {
                     sessionAttributes.appState = intent.slots.answer.value || "menu"
-                    say = "Currently learning: " + sets[sessionAttributes.setNumber - 1].name + "Say start or next to begin.";
+                    say = "Currently learning: " + sets[sessionAttributes.setNumber - 1].name + " Say start or next to begin.";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
@@ -85,7 +85,7 @@ exports.handler = function( event, context ) {
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
             intentStates[intent.name]();
-        }
+        },
 
         test: function(intent, sessionAttributes) {
             handlers = {
@@ -99,14 +99,13 @@ exports.handler = function( event, context ) {
                     say = definition + " " + choices;
 
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
-                }
+                },
 
                 answer: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
-                    if isCorrect(intent.slots.answer.value, currentQuestion) {
+                    if (isCorrect(intent.slots.answer.value, currentQuestion)) {
                         say = "That is correct.";
                         sessionAttributes['score'] += 1;
-
                     } else {
                         say = "That is incorrect. The correct answer was " + sessionAttributes['questions'][currentQuestion]['term'];
                     }
@@ -118,7 +117,7 @@ exports.handler = function( event, context ) {
                     }
 
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
-                }
+                },
 
                 cancel: function () {
                     say = "";
@@ -131,6 +130,14 @@ exports.handler = function( event, context ) {
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
+
+            var iStates = {}
+            iStates["InitTestIntent"] = handlers.initializeTest;
+            iStates["AnswerIntent"] = handlers.answer;
+            iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
+            iStates["AMAZON.HelpIntent"] = handlers.help;
+
+            intentStates[intent.name]();
         }
     };
 
