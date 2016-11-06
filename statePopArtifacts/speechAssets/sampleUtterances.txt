@@ -1,20 +1,10 @@
-SkipSetInten skip
-SkipSetInten next
-SkipSetInten next one
-SkipSetInten skip this
-SkipSetInten skip this set
-SkipSetInten next set
+ChangeStateIntent learn
+ChangeStateIntent test
 
-LearnOrTestIntent i want to {mySlot}
-LearnOrTestIntent {mySlot}
-LearnOrTestIntent can I {mySlot}
-LearnOrTestIntent let me {mySlot}
-LearnOrTestIntent {mySlot} please
-LearnOrTestIntent {mySlot} me
+ChangeSetIntent next
+ChangeSetIntent next set
+ChangeSetIntent next set please
+ChangeSetIntent move on
+ChangeSetIntent move on to the next set
 
-AnswerIntent the answer is {mySlot}
-AnswerIntent {mySlot}
-AnswerIntent is it {mySlot}
-AnswerIntent my answer is {mySlot}
-AnswerIntent I think it is {mySlot}
-AnswerIntent it is {mySlot}
+AnswerIntent {my_slot}
