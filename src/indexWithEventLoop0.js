@@ -55,8 +55,16 @@ exports.handler = function( event, context ) {
 
         learn: function (intentName) {
             handlers = {
-                stateRequest: function () {
+                stateRequest: function () {                
+                        var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
+                        say = term['term'] + ", " + term['definition'];
+                        sessionAttributes['currentLearnIndex'] += 1;
 
+                        if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {  
+                            sessionAttributes['applicationState'] = menu;
+                        }
+
+                        context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
                 },
 
                 cancel: function () {
@@ -84,12 +92,12 @@ exports.handler = function( event, context ) {
             currentTestIndex = 0,
             currentLearnIndex = 0;
 
-        session.attributes['questions'] = questions;
-        session.attributes['correctAnswers'] = correctAnswers;
-        session.attributes['questionChoices'] = questionChoices;
-        session.attributes['score'] = score;
-        session.attributes['currentTestIndex'] = currentTestIndex;
-        session.attributes['currentLearnIndex'] = currentLearnIndex;
+        sessionAttributes['questions'] = questions;
+        sessionAttributes['correctAnswers'] = correctAnswers;
+        sessionAttributes['questionChoices'] = questionChoices;
+        sessionAttributes['score'] = score;
+        sessionAttributes['currentTestIndex'] = currentTestIndex;
+        sessionAttributes['currentLearnIndex'] = currentLearnIndex;
         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
 
     } else {
