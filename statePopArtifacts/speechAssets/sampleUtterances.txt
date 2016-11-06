@@ -1,6 +1,20 @@
-SetNameIntent i want to study {set_name}
-SetNameIntent let me study {set_name}
-SetNameIntent show me {set_name}
-SetNameIntent load {set_name}
-SetNameIntent i want {set_name}
-SetNameIntent {set_name}
+SkipSetInten skip
+SkipSetInten next
+SkipSetInten next one
+SkipSetInten skip this
+SkipSetInten skip this set
+SkipSetInten next set
+
+LearnOrTestIntent i want to {mySlot}
+LearnOrTestIntent {mySlot}
+LearnOrTestIntent can I {mySlot}
+LearnOrTestIntent let me {mySlot}
+LearnOrTestIntent {mySlot} please
+LearnOrTestIntent {mySlot} me
+
+AnswerIntent the answer is {mySlot}
+AnswerIntent {mySlot}
+AnswerIntent is it {mySlot}
+AnswerIntent my answer is {mySlot}
+AnswerIntent I think it is {mySlot}
+AnswerIntent it is {mySlot}

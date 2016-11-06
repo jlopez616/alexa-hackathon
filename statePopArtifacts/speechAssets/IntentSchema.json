@@ -2,11 +2,23 @@
 {
   "intents": [
     {
-      "intent": "StateRequestIntent",
+      "intent": "SkipSetIntent",
+    },
+    {
+      "intent": "LearnOrTestIntent",
       "slots":[
         {
-          "name":"usstate",
-          "type":"AMAZON.US_STATE"
+          "name":"answer",
+          "type":"LEARN_OR_TEST"
+        }
+      ]
+    },
+    {
+      "intent": "AnswerIntent",
+      "slots":[
+        {
+          "name":"answer",
+          "type":"LIST_OF_ANSWERS"
         }
       ]
     },
