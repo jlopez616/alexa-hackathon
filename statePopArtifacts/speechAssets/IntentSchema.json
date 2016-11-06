@@ -2,7 +2,31 @@
 {
   "intents": [
     {
-
+      "intent": "ContinueIntent"
+    },
+    {
+      "intent": "ChangeSetIntent"
+    },
+    {
+      "intent": "ChangeStateIntent",
+      "slots": [
+        {
+          "name": "answer",
+          "type": "LIST_OF_ANSWERS"
+        }
+      ]
+    },
+    {
+      "intent": "AnswerIntent",
+      "slots": [
+        {
+          "name": "answer",
+          "type": "LIST_OF_ANSWERS"
+        }
+      ]
+    },
+    {
+      "intent": "InitTestIntent"
     },
     {
       "intent": "AMAZON.StartOverIntent"
