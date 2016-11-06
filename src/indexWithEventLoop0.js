@@ -95,13 +95,17 @@ exports.handler = function( event, context ) {
                 },
 
                 cancel: function () {
-
+                    say = "";
+                    shouldEndSession = true;
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-
+                    say = "";
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
+            
             var iStates = {}
             iStates["ContinueIntent"] = handlers.continue;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
@@ -144,11 +148,14 @@ exports.handler = function( event, context ) {
                 }
 
                 cancel: function () {
-                    //To Implement Later
+                    say = "";
+                    shouldEndSession = true;
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-
+                    say = "";
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
         }
