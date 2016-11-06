@@ -110,7 +110,7 @@ exports.handler = function( event, context ) {
             intentStates[intent.name]();
         }
 
-        test: function(intentName) {
+        test: function(intent, sessionAttributes) {
             handlers = {
                 initializeTest: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
@@ -126,7 +126,7 @@ exports.handler = function( event, context ) {
 
                 answer: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
-                    if isCorrect(request.intent.slots.answer.value, currentQuestion) {
+                    if isCorrect(intent.slots.answer.value, currentQuestion) {
                         say = "That is correct.";
                         sessionAttributes['score'] += 1;
 
@@ -159,7 +159,7 @@ exports.handler = function( event, context ) {
         + " for you. Would you like to learn this set or move on to the next set?";
 
         //initialization
-        var answerData = populateAnswers(questions),
+        var answerData = populateAnswers(sets[0]['questions']),
             correctAnswers = answerData['correctAnswers'],
             questionChoices = answerData['choices'],
             score = 0,
