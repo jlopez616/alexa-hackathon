@@ -49,25 +49,25 @@ exports.handler = function( event, context ) {
                 changeSet: function () {
                     sessionAttributes.setNumber++;
                     if (sessionAttributes.setNumber > sets.length) sessionAttributes.setNumber = 1;
-                    say = "I've selected Set" + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
+                    say = "I've selected " + sets[sessionAttributes.setNumber - 1].name
                     + " for you. Would you like to learn this set or move on to the next set?";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 changeState: function () {
                     sessionAttributes.appState = intent.slots.answer.value || "menu"
-                    say = "";
+                    say = "Currently learning: " + sets[sessionAttributes.setNumber - 1].name + "Say start or next to begin.";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 cancel: function () {
-                    say = "";
+                    say = "Exiting application. Goodbye!";
                     shouldEndSession = true;
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-                    say = "";
+                    say = "Would you like to learn this set or move on to the next set?";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
@@ -83,22 +83,25 @@ exports.handler = function( event, context ) {
         learn: function (intent, sessionAttributes) {
             handlers = {
                 continue: function () {
-                        var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
-                        say = term['term'] + ", " + term['definition'];
-                        sessionAttributes['currentLearnIndex'] += 1;
-                        if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {
-                            sessionAttributes['applicationState'] = menu;
-                        }
+                    var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
+                    say = term['term'] + ", " + term['definition'];
+                    sessionAttributes['currentLearnIndex'] += 1;
+                    if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {
+                        sessionAttributes['applicationState'] = menu;
+                    }
 
-                        context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
                 },
 
                 cancel: function () {
-
+                    say = "Exiting to menu";
+                    sessionAttributes.appState = "menu"
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-
+                    say = "Say next to continue or exit to return to the menu";
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
             var iStates = {}
@@ -116,11 +119,11 @@ exports.handler = function( event, context ) {
 
         //initialization
         var answerData = populateAnswers(questions),
-            correctAnswers = answerData['correctAnswers'],
-            questionChoices = answerData['choices'],
-            score = 0,
-            currentTestIndex = 0,
-            currentLearnIndex = 0;
+        correctAnswers = answerData['correctAnswers'],
+        questionChoices = answerData['choices'],
+        score = 0,
+        currentTestIndex = 0,
+        currentLearnIndex = 0;
 
         sessionAttributes['questions'] = questions;
         sessionAttributes['correctAnswers'] = correctAnswers;
