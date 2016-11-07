@@ -4,33 +4,31 @@
 
 var https = require('https');
 
-var sets = [
-    {
-        name: "",
-        questions: [
-            {
-                term: "",
-                definition: ""
-            }, {
-                term: "",
-                definition: ""
-            }
-
-        ]
-    },
-    {
-        name: "",
-        questions: [
-            {
-                term: "",
-                definition: ""
-            }, {
-                term: "",
-                definition: ""
-            }
-        ]
-    }
-]
+var sets = [{
+    name: "Animal sounds",
+    terms: [
+        {
+            term: "dog",
+            definition: "woof woof"
+        },
+        {
+            term: "cat",
+            definition: "meow meow"
+        },
+        {
+            term: "cow",
+            definition: "moo moo"
+        },
+        {
+            term: "duck",
+            definition: "quack quack"
+        },
+        {
+            term: "bird",
+            definition: "chirp chirp"
+        }
+    ]
+}];
 
 exports.handler = function( event, context ) {
     var say = "";
@@ -40,8 +38,8 @@ exports.handler = function( event, context ) {
     var rank = 0;
     var sessionAttributes = event.session.attributes || {};
 
-    sessionAttributes.applicationState = sessionAttributes.appState || "menu";
-    sessionAttributes.applicationState = sessionAttributes.setNumber || 1;
+    sessionAttributes.appState = sessionAttributes.appState || "menu";
+    sessionAttributes.setNumber = sessionAttributes.setNumber || 1;
 
     var states = {
         menu: function (intent, sessionAttributes) {
@@ -50,13 +48,18 @@ exports.handler = function( event, context ) {
                     sessionAttributes.setNumber++;
                     if (sessionAttributes.setNumber > sets.length) sessionAttributes.setNumber = 1;
                     say = "I've selected Set" + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
-                    + " for you. Would you like to learn this set or move on to the next set?";
+                    + " for you. Would you like to use this set or move on to the next set?";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 changeState: function () {
-                    sessionAttributes.appState = intent.slots.answer.value || "menu"
-                    say = "";
+                    sessionAttributes.appState = intent.slots.changestate.value || "menu";
+                    if (sessionAttributes.appState === "learn") {
+                        say = "Prepare to learn " + sets[sessionAttributes.setNumber - 1].name;
+                    } else if (sessionAttributes.appState == "test") {
+                        say = "I will now test you on " + sets[sessionAttributes.setNumber - 1].name;
+                    }
+                    
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
@@ -72,12 +75,12 @@ exports.handler = function( event, context ) {
                 }
             }
             var iStates = {}
-            iStates["ChangeSetIntent"] = handlers.changeSet;
+            iStates["IterateIntent"] = handlers.changeSet;
             iStates["ChangeStateIntent"] = handlers.changeState;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
-            intentStates[intent.name]();
+            iStates[intent.name]();
         },
 
         learn: function (intent, sessionAttributes) {
@@ -88,7 +91,7 @@ exports.handler = function( event, context ) {
                         sessionAttributes['currentLearnIndex'] += 1;
 
                         if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {  
-                            sessionAttributes['applicationState'] = 'menu';
+                            sessionAttributes['appState'] = 'menu';
                         }
 
                         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
@@ -105,32 +108,34 @@ exports.handler = function( event, context ) {
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
-            
+
             var iStates = {}
-            iStates["ContinueIntent"] = handlers.continue;
+            iStates["IterateIntent"] = handlers.continue;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
-
-            intentStates[intent.name]();
-        }
+            console.log(intent.name);
+            iStates[intent.name]();
+        },
 
         test: function(intent, sessionAttributes) {
             handlers = {
                 initializeTest: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
                     var definition = sessionAttributes['questions'][currentQuestion]['definition'];
-                    var choices = "A: " + sessionAttributes['questionChoices']['currentTestIndex'][0] + " " +
-                                  "B: " + sessionAttributes['questionChoices']['currentTestIndex'][1] + " " + 
-                                  "C: " + sessionAttributes['questionChoices']['currentTestIndex'][2] + " " + 
-                                  "D: " + sessionAttributes['questionChoices']['currentTestIndex'][3];
+                    
+                    var choices = "A: " + sessionAttributes['questionChoices'][currentQuestion][0] + " " +
+                                  "B: " + sessionAttributes['questionChoices'][currentQuestion][1] + " " + 
+                                  "C: " + sessionAttributes['questionChoices'][currentQuestion][2] + " " + 
+                                  "D: " + sessionAttributes['questionChoices'][currentQuestion][3];
+
                     say = definition + " " + choices;
 
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
-                }
+                },
 
                 answer: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
-                    if isCorrect(intent.slots.answer.value, currentQuestion) {
+                    if (isCorrect(intent.slots.options.value, sessionAttributes.correctAnswers[currentQuestion])) {
                         say = "That is correct.";
                         sessionAttributes['score'] += 1;
 
@@ -141,14 +146,15 @@ exports.handler = function( event, context ) {
                     sessionAttributes['currentTestIndex'] += 1;
 
                     if (sessionAttributes['currentTestIndex'] == sessionAttributes['questions'].length) {
-                        sessionAttributes['applicationState'] = 'menu';
+                        sessionAttributes['appState'] = 'menu';
+                        say = "You got " + sessionAttributes.score + " out of " + sessionAttributes['questions'].length + " questions correct.";
                     }
 
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
-                }
+                },
 
                 cancel: function () {
-                    say = "";
+                    say = "You got " + sessionAttributes.score + " out of " + (sessionAttributes['currentTestIndex'] + 1) + " questions correct.";
                     shouldEndSession = true;
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
@@ -158,31 +164,40 @@ exports.handler = function( event, context ) {
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
+
+            var iStates = {}
+            iStates["IterateIntent"] = handlers.initializeTest;
+            iStates["AnswerIntent"] = handlers.answer;
+            iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
+            iStates["AMAZON.HelpIntent"] = handlers.help;
+
+            iStates[intent.name]();
         }
     };
 
     if (event.request.type === "LaunchRequest") {
-        say = "Welcome to Quizlex! You have " + questions.length + " sets to study. I've selected " + sets[0].name
+        say = "Welcome to Quizlex! You have " + sets.length + " sets to study. I've selected " + sets[0].name
         + " for you. Would you like to learn this set or move on to the next set?";
 
         //initialization
-        var answerData = populateAnswers(sets[0]['questions']),
+        var answerData = populateAnswers(sets[0].terms),
             correctAnswers = answerData['correctAnswers'],
             questionChoices = answerData['choices'],
             score = 0,
             currentTestIndex = 0,
             currentLearnIndex = 0;
 
-        sessionAttributes['questions'] = questions;
-        sessionAttributes['correctAnswers'] = correctAnswers;
-        sessionAttributes['questionChoices'] = questionChoices;
-        sessionAttributes['score'] = score;
-        sessionAttributes['currentTestIndex'] = currentTestIndex;
-        sessionAttributes['currentLearnIndex'] = currentLearnIndex;
+        sessionAttributes.questions = sets[0].terms;
+        sessionAttributes.correctAnswers = correctAnswers;
+        sessionAttributes.questionChoices = questionChoices;
+        sessionAttributes.score = score;
+        sessionAttributes.currentTestIndex = currentTestIndex;
+        sessionAttributes.currentLearnIndex = currentLearnIndex;
+        sessionAttributes.appState = "menu";
         context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
 
     } else {
-        states[sessionAttributes.appState](event.request.intent);
+        states[sessionAttributes.appState](event.request.intent, sessionAttributes);
     }
 };
 
@@ -231,10 +246,10 @@ function populateAnswers(questions) {
         currentTerm = questions[i]['term'];
         currentChoices.push(currentTerm);
 
-        for (var i = 0; i < 3; i++) {
+        for (var j = 0; j < 3; j++) {
             choice_index = Math.floor(Math.random() * GAME_LENGTH);
             if (questions[choice_index]['term'] == currentTerm) {
-                i--;
+                j--;
             } else {
                 currentChoices.push(questions[choice_index]['term']);
             }
@@ -244,16 +259,16 @@ function populateAnswers(questions) {
 
         correct_answer = choice_names[currentChoices.indexOf(currentTerm)]; //returns string value of correct choice index;
 
-        choices.append(currentChoices);
-
-        correct_answers.append(correct_answer);
+        choices.push(currentChoices);
+        currentChoices = [];
+        correct_answers.push(correct_answer);
     }
 
     return {correctAnswers: correct_answers, choices: choices};
 }
 
-function isCorrect(givenAnswer, questionIndex) {
-    if (givenAnswer === sessionAttributes['correctAnswers'][questionIndex]) {
+function isCorrect(givenAnswer, correctAnswer) {
+    if (givenAnswer.toUpperCase() === correctAnswer.toUpperCase()) {
         return true;
     } else {
         return false;
