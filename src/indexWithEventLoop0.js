@@ -2,6 +2,8 @@
 
 // var AWS = require('aws-sdk');
 
+"use strict";
+
 var https = require('https');
 
 var sets = [{
@@ -30,7 +32,7 @@ var sets = [{
     ]
 }];
 
-exports.handler = function( event, context ) {
+exports.handler = (event, context) => {
     var say = "";
     var shouldEndSession = false;
     var myState = "";
@@ -42,53 +44,72 @@ exports.handler = function( event, context ) {
     sessionAttributes.setNumber = sessionAttributes.setNumber || 1;
 
     var states = {
-        menu: function (intent, sessionAttributes) {
+        menu: (intent, sessionAttributes) => {
             handlers = {
-                changeSet: function () {
+                changeSet: () => {
                     sessionAttributes.setNumber++;
-                    if (sessionAttributes.setNumber > sets.length) sessionAttributes.setNumber = 1;
+                    
+                    if (sessionAttributes.setNumber > sets.length) {
+                        sessionAttributes.setNumber = 1;
+                    }
 
-                    say = "I've selected set " + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
-                    + " for you. Would you like to use this set or move on to the next set?";
+                    say = "I've selected set " + sessionAttributes.setNumber + " " + 
+                          sets[sessionAttributes.setNumber - 1].name + " for you. " + 
+                          "Would you like to use this set or move on to the next set?";
 
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 },
 
-                changeState: function () {
+                changeState: () => {
 
                     sessionAttributes.appState = intent.slots.changestate.value || "menu";
                     if (sessionAttributes.appState === "learn") {
-                        say = "Prepare to learn " + sets[sessionAttributes.setNumber - 1].name;
+                        say = "Prepare to learn " + 
+                              sets[sessionAttributes.setNumber - 1].name;
                     } else if (sessionAttributes.appState == "test") {
-                        say = "I will now test you on " + sets[sessionAttributes.setNumber - 1].name;
+                        say = "I will now test you on " + 
+                              sets[sessionAttributes.setNumber - 1].name;
                     }
                     
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 },
 
-                cancel: function () {
+                cancel: () => {
                     say = "Exiting application. Goodbye!";
                     shouldEndSession = true;
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 },
 
-                help: function () {
+                help: () => {
                     say = "Would you like to learn this set or move on to the next set?";
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 }
             }
+
             var iStates = {}
-            iStates["IterateIntent"] = handlers.changeSet;
-            iStates["ChangeStateIntent"] = handlers.changeState;
+            iStates.IterateIntent = handlers.changeSet;
+            iStates.ChangeStateIntent = handlers.changeState;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
             iStates[intent.name]();
         },
 
-        learn: function (intent, sessionAttributes) {
+        learn: (intent, sessionAttributes) => {
             handlers = {
-                continue: function () {
+                continue: () => {
                     var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
                     say = term['term'] + ", " + term['definition'];
                     sessionAttributes['currentLearnIndex'] += 1;
@@ -97,81 +118,130 @@ exports.handler = function( event, context ) {
                         sessionAttributes['appState'] = 'menu';
                     }
 
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession)
+                    });
                 },
 
-                cancel: function () {
+                cancel: () => {
                     say = "Exiting to menu";
                     sessionAttributes.appState = "menu"
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 },
 
-                help: function () {
+                help: () => {
                     say = "Say next to continue or exit to return to the menu";
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 }
             }
 
             var iStates = {}
-            iStates["IterateIntent"] = handlers.continue;
+            iStates.IterateIntent = handlers.continue;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
             iStates[intent.name]();
         },
 
-        test: function(intent, sessionAttributes) {
+        test: (intent, sessionAttributes) => {
+            say = "";
+
             handlers = {
-                initializeTest: function() {
+                initializeTest: () => {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
                     var definition = sessionAttributes['questions'][currentQuestion]['definition'];
                     
-                    var choices = "A: " + sessionAttributes['questionChoices'][currentQuestion][0] + " " +
-                                  "B: " + sessionAttributes['questionChoices'][currentQuestion][1] + " " + 
-                                  "C: " + sessionAttributes['questionChoices'][currentQuestion][2] + " " + 
-                                  "D: " + sessionAttributes['questionChoices'][currentQuestion][3];
+                    var choices = "A: " + sessionAttributes.questionChoices[currentQuestion][0] + " " +
+                                  "B: " + sessionAttributes.questionChoices[currentQuestion][1] + " " + 
+                                  "C: " + sessionAttributes.questionChoices[currentQuestion][2] + " " + 
+                                  "D: " + sessionAttributes.questionChoices[currentQuestion][3];
 
 
                     say = definition + " " + choices;
 
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession)
+                    });
                 },
 
-                answer: function() {
+                answer: () => {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
 
                     if (isCorrect(intent.slots.options.value, sessionAttributes.correctAnswers[currentQuestion])) {
                         say = "That is correct.";
                         sessionAttributes['score'] += 1;
                     } else {
-                        say = "That is incorrect. The correct answer was " + sessionAttributes['questions'][currentQuestion]['term'];
+                        say = "That is incorrect. The correct answer was " 
+                              + sessionAttributes['questions'][currentQuestion]['term'];
                     }
 
                     sessionAttributes['currentTestIndex'] += 1;
 
                     if (sessionAttributes['currentTestIndex'] == sessionAttributes['questions'].length) {
                         sessionAttributes['appState'] = 'menu';
-                        say = "You got " + sessionAttributes.score + " out of " + sessionAttributes['questions'].length + " questions correct.";
+                        say += " You got " + sessionAttributes.score + " out of " + 
+                              sessionAttributes['questions'].length + " questions correct.";
                     }
 
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession)
+                    });
                 },
 
-                cancel: function () {
-                    say = "You got " + sessionAttributes.score + " out of " + (sessionAttributes['currentTestIndex'] + 1) + " questions correct.";
+                dunno: () => {
+                    var currentQuestion = sessionAttributes['currentTestIndex'];
+
+                    say = "The correct answer was " +
+                          sessionAttributes['questions'][currentQuestion]['term'];
+
+                    sessionAttributes['currentTestIndex'] += 1;
+
+                    if (sessionAttributes['currentTestIndex'] == sessionAttributes['questions'].length) {
+                        sessionAttributes['appState'] = 'menu';
+                        say += " You got " + sessionAttributes.score + " out of " + 
+                              sessionAttributes['questions'].length + " questions correct.";
+                    }
+
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession)
+                    });
+                },
+
+                cancel: () => {
+                    say = "You got " + sessionAttributes.score + " out of " + 
+                          (sessionAttributes['currentTestIndex'] + 1) + 
+                          " questions correct.";
+
                     shouldEndSession = true;
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 },
 
-                help: function () {
+                help: () => {
                     say = "";
-                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+                    context.succeed({
+                        sessionAttributes: sessionAttributes, 
+                        response: buildSpeechletResponse(say, shouldEndSession) 
+                    });
                 }
             }
 
             var iStates = {}
-            iStates["IterateIntent"] = handlers.initializeTest;
-            iStates["AnswerIntent"] = handlers.answer;
+            iStates.IterateIntent = handlers.initializeTest;
+            iStates.AnswerIntent = handlers.answer;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
 
@@ -180,8 +250,10 @@ exports.handler = function( event, context ) {
     };
 
     if (event.request.type === "LaunchRequest") {
-        say = "Welcome to Quizlex! You have " + sets.length + " sets to study. I've selected " + sets[0].name
-        + " for you. Would you like to learn this set or move on to the next set?";
+        say = "Welcome to Quizlex! You have " + sets.length + 
+              " sets to study. I've selected " + sets[0].name +
+              " for you. Would you like to learn this set or move " + 
+              "on to the next set?";
 
         //initialization
         var answerData = populateAnswers(sets[0].terms),
@@ -198,7 +270,11 @@ exports.handler = function( event, context ) {
         sessionAttributes.currentTestIndex = currentTestIndex;
         sessionAttributes.currentLearnIndex = currentLearnIndex;
         sessionAttributes.appState = "menu";
-        context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
+
+        context.succeed({
+            sessionAttributes: sessionAttributes, 
+            response: buildSpeechletResponse(say, shouldEndSession) 
+        });
 
     } else {
         states[sessionAttributes.appState](event.request.intent, sessionAttributes);
