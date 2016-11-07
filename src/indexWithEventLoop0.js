@@ -47,12 +47,15 @@ exports.handler = function( event, context ) {
                 changeSet: function () {
                     sessionAttributes.setNumber++;
                     if (sessionAttributes.setNumber > sets.length) sessionAttributes.setNumber = 1;
-                    say = "I've selected Set" + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
+
+                    say = "I've selected set " + sessionAttributes.setNumber + " " + sets[sessionAttributes.setNumber - 1].name
                     + " for you. Would you like to use this set or move on to the next set?";
+
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 changeState: function () {
+
                     sessionAttributes.appState = intent.slots.changestate.value || "menu";
                     if (sessionAttributes.appState === "learn") {
                         say = "Prepare to learn " + sets[sessionAttributes.setNumber - 1].name;
@@ -64,13 +67,13 @@ exports.handler = function( event, context ) {
                 },
 
                 cancel: function () {
-                    say = "";
+                    say = "Exiting application. Goodbye!";
                     shouldEndSession = true;
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-                    say = "";
+                    say = "Would you like to learn this set or move on to the next set?";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
@@ -86,25 +89,25 @@ exports.handler = function( event, context ) {
         learn: function (intent, sessionAttributes) {
             handlers = {
                 continue: function () {
-                        var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
-                        say = term['term'] + ", " + term['definition'];
-                        sessionAttributes['currentLearnIndex'] += 1;
+                    var term = sessionAttributes['questions'][sessionAttributes['currentLearnIndex']];
+                    say = term['term'] + ", " + term['definition'];
+                    sessionAttributes['currentLearnIndex'] += 1;
 
-                        if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {  
-                            sessionAttributes['appState'] = 'menu';
-                        }
+                    if (sessionAttributes['currentLearnIndex'] == sessionAttributes['questions'].length) {  
+                        sessionAttributes['appState'] = 'menu';
+                    }
 
-                        context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
+                    context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
                 },
 
                 cancel: function () {
-                    say = "";
-                    shouldEndSession = true;
+                    say = "Exiting to menu";
+                    sessionAttributes.appState = "menu"
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 },
 
                 help: function () {
-                    say = "";
+                    say = "Say next to continue or exit to return to the menu";
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession) });
                 }
             }
@@ -113,7 +116,7 @@ exports.handler = function( event, context ) {
             iStates["IterateIntent"] = handlers.continue;
             iStates["AMAZON.StopIntent"] = iStates["AMAZON.CancelIntent"] = handlers.cancel;
             iStates["AMAZON.HelpIntent"] = handlers.help;
-            console.log(intent.name);
+
             iStates[intent.name]();
         },
 
@@ -128,6 +131,7 @@ exports.handler = function( event, context ) {
                                   "C: " + sessionAttributes['questionChoices'][currentQuestion][2] + " " + 
                                   "D: " + sessionAttributes['questionChoices'][currentQuestion][3];
 
+
                     say = definition + " " + choices;
 
                     context.succeed({sessionAttributes: sessionAttributes, response: buildSpeechletResponse(say, shouldEndSession)});
@@ -135,10 +139,10 @@ exports.handler = function( event, context ) {
 
                 answer: function() {
                     var currentQuestion = sessionAttributes['currentTestIndex'];
+
                     if (isCorrect(intent.slots.options.value, sessionAttributes.correctAnswers[currentQuestion])) {
                         say = "That is correct.";
                         sessionAttributes['score'] += 1;
-
                     } else {
                         say = "That is incorrect. The correct answer was " + sessionAttributes['questions'][currentQuestion]['term'];
                     }

@@ -1,24 +1,29 @@
-
 {
   "intents": [
-    {
-      "intent": "SkipSetIntent",
-    },
-    {
-      "intent": "LearnOrTestIntent",
-      "slots":[
-        {
-          "name":"answer",
-          "type":"LEARN_OR_TEST"
-        }
-      ]
-    },
     {
       "intent": "AnswerIntent",
       "slots":[
         {
-          "name":"answer",
-          "type":"LIST_OF_ANSWERS"
+          "name":"options",
+          "type":"multiplechoice"
+        }
+      ]
+    },
+    {
+      "intent": "IterateIntent",
+      "slots": [
+        {
+          "name":"setnavigation",
+          "type":"iteration"
+        }
+      ]
+    },
+    {
+      "intent": "ChangeStateIntent",
+      "slots": [
+        {
+          "name":"changestate",
+          "type":"statelist"
         }
       ]
     },

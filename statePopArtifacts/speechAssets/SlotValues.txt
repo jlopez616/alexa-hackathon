@@ -1,6 +1,18 @@
-learn
-test
+//iteration
+continue
+next
+start
+okay
+gotcha
+let's go
+
+//multiplechoice
 a
 b
 c
 d
+
+//statelist
+learn
+test
+menu
